@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Funds - Admin UMKM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+      .btn-action {
+        transition: all 0.3s ease;
+      }
+
+      .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .table-editable td {
+        padding: 0.75rem 0.5rem;
+      }
+
+      .table-editable input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+      }
+
+      .table-editable input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      .camera-frame {
+        border: 3px solid #3b82f6;
+        border-radius: 1rem;
+        overflow: hidden;
+        background: #000;
+        aspect-ratio: 4/5;
+      }
+
+      @media (max-width: 768px) {
+        .camera-frame {
+          aspect-ratio: 9/16;
+        }
+      }
+
+      .modal-backdrop {
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .sidebar-hidden {
+          transform: translateX(-100%);
+          transition: transform 0.3s ease;
+        }
+
+        .sidebar-visible {
+          transform: translateX(0);
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <!-- Sidebar -->
+    <div
+      id="sidebar"
+      class="fixed left-0 top-0 w-64 h-screen bg-gradient-to-b from-blue-600 to-blue-800 text-white shadow-lg md:translate-x-0 sidebar-hidden z-40 transition-transform">
+      <div class="p-6 border-b border-blue-700">
+        <div class="flex items-center">
+          <i class="fas fa-brain text-2xl mr-3"></i>
+          <div>
+            <h1 class="text-xl font-bold">Smart Funds</h1>
+            <p class="text-xs text-blue-200">Admin UMKM</p>
+          </div>
+        </div>
+      </div>
+
+      <nav class="mt-8 px-4">
+        <div class="mb-6">
+          <p class="text-xs text-blue-300 font-semibold mb-3">MENU</p>
+          <a
+            href="/umkm/scan-dokumen.html"
+            class="flex items-center px-4 py-3 mt-2 hover:bg-blue-700 rounded-lg transition">
+            <i class="fas fa-camera mr-3"></i>Scan Dokumen
+          </a>
+          <a
+            href="/umkm/riwayat-document.html"
+            class="flex items-center px-4 py-3 mt-2 hover:bg-blue-700 rounded-lg transition">
+            <i class="fas fa-list mr-3"></i>Riwayat Dokumen
+          </a>
+          <a
+            href="/umkm/laporan-keuangan.html"
+            class="flex items-center px-4 py-3 mt-2 hover:bg-blue-700 rounded-lg transition">
+            <i class="fas fa-chart-bar mr-3"></i>Laporan Keuangan
+          </a>
+          <a
+            href="/umkm/ajukan-pinjaman.html"
+            class="flex items-center px-4 py-3 mt-2 bg-blue-700 rounded-lg font-semibold">
+            <i class="fas fa-pencil mr-3"></i>Ajukan Pinjaman
+          </a>
+          <a
+            href="../index.html"
+            class="flex items-center px-4 py-3 mt-2 hover:bg-blue-700 rounded-lg transition">
+            <i class="fas fa-sign-out mr-3"></i>Logout
+          </a>
+        </div>
+
+        <div class="border-t border-blue-700 mt-6 pt-6">
+          <p class="text-xs text-blue-300 font-semibold mb-3">AKUN</p>
+          <div class="flex items-center p-3 bg-blue-700 rounded-lg">
+            <i class="fas fa-user-circle text-2xl mr-3"></i>
+            <div class="text-xs">
+              <p class="font-semibold">Toko Batik Indah</p>
+              <p class="text-blue-200">Pemilik</p>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <!-- Mobile Toggle Button -->
+    <button
+      onclick="toggleSidebar()"
+      class="md:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-3 rounded-lg">
+      <i class="fas fa-bars"></i>
+    </button>
+    <!-- Main Content -->
+    <div class="md:ml-64">
+      <!-- Header -->
+      <div
+        class="bg-white border-b border-gray-200 px-4 md:px-8 py-6 sticky top-0 z-10 shadow-sm mt-[80px] sm:mt-0">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-900">
+              Ajukan Pinjaman
+            </h2>
+            <!-- <p class="text-xs md:text-sm text-gray-600 mt-1">Riwayat Dokumen</p> -->
+          </div>
+          <div class="text-right">
+            <p class="text-xs md:text-sm text-gray-600" id="currentDate"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 md:p-8">
+        <!-- Pengajuan Pinjaman -->
+        <section class="p-6 bg-white shadow rounded-lg mt-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-4">
+            Pengajuan Pinjaman
+          </h2>
+          <p class="text-gray-600 text-sm mb-6">
+            Lengkapi data berikut untuk mengajukan pinjaman UMKM.
+          </p>
+
+          <form id="loanForm" class="space-y-5">
+            <!-- Nama -->
+            <div>
+              <label class="block font-medium text-gray-700 mb-1"
+                >Nama Lengkap</label
+              >
+              <input
+                type="text"
+                class="w-full border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Masukkan nama lengkap"
+                required />
+            </div>
+
+            <!-- Nominal Pinjaman -->
+            <div>
+              <label class="block font-medium text-gray-700 mb-1"
+                >Nominal Pinjaman</label
+              >
+              <input
+                type="number"
+                class="w-full border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Contoh: 5000000"
+                required />
+            </div>
+
+            <!-- Tenor -->
+            <div>
+              <label class="block font-medium text-gray-700 mb-1"
+                >Tenor Pembayaran</label
+              >
+              <select
+                class="w-full border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500"
+                required>
+                <option value="">Pilih tenor</option>
+                <option>3 Bulan</option>
+                <option>6 Bulan</option>
+                <option>12 Bulan</option>
+              </select>
+            </div>
+
+            <!-- Alasan -->
+            <div>
+              <label class="block font-medium text-gray-700 mb-1"
+                >Alasan Pengajuan Pinjaman</label
+              >
+              <textarea
+                class="w-full border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500"
+                rows="3"
+                placeholder="Tuliskan alasan pengajuan pinjaman..."
+                required></textarea>
+            </div>
+
+            <!-- Upload Berkas -->
+            <div>
+              <label class="block font-medium text-gray-700 mb-1"
+                >Upload Dokumen Pendukung</label
+              >
+              <input
+                type="file"
+                class="w-full border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500"
+                required />
+              <p class="text-xs text-gray-500 mt-1">Format: JPG, PNG, PDF</p>
+            </div>
+
+            <!-- Checkbox Pernyataan -->
+            <div
+              class="flex items-start space-x-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <input
+                id="agreement"
+                type="checkbox"
+                class="mt-1 w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+              <label
+                for="agreement"
+                class="text-sm text-gray-700 leading-relaxed">
+                Saya menyatakan bahwa laporan keuangan dan dokumen pendukung
+                yang saya unggah akan diperiksa dan diverifikasi oleh
+                <b>pemberi pinjaman</b>.
+              </label>
+            </div>
+
+            <!-- Submit -->
+            <div class="pt-4">
+              <button
+                type="submit"
+                class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                Ajukan Pinjaman
+              </button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      /* ============================
+     SIDEBAR CONTROL
+  ============================ */
+      function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        sidebar.classList.toggle("sidebar-hidden");
+        sidebar.classList.toggle("sidebar-visible");
+      }
+
+      function closeSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        sidebar.classList.add("sidebar-hidden");
+        sidebar.classList.remove("sidebar-visible");
+      }
+
+      /* ============================
+     SET DATE HEADER
+  ============================ */
+      function setCurrentDate() {
+        const options = {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        };
+        const today = new Date();
+        document.getElementById("currentDate").textContent =
+          today.toLocaleDateString("id-ID", options);
+      }
+    </script>
+    <script>
+      document
+        .getElementById("loanForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const agree = document.getElementById("agreement");
+
+          // Validasi checkbox
+          if (!agree.checked) {
+            Swal.fire({
+              title: "Pernyataan Belum Dicentang",
+              text: "Anda harus menyetujui pernyataan sebelum mengajukan pinjaman.",
+              icon: "warning",
+              confirmButtonText: "OK",
+            });
+            return;
+          }
+
+          // Konfirmasi sebelum submit
+          Swal.fire({
+            title: "Ajukan Pinjaman?",
+            text: "Data pengajuan akan dikirim dan diverifikasi oleh pemberi pinjaman.",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#2563eb",
+            cancelButtonColor: "#6b7280",
+            confirmButtonText: "Ya, Ajukan!",
+            cancelButtonText: "Batal",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              Swal.fire({
+                title: "Terkirim!",
+                text: "Pengajuan pinjaman Anda berhasil dikirim dan sedang diproses.",
+                icon: "success",
+                confirmButtonText: "OK",
+              });
+
+              // Jika mau submit ke server:
+              // this.submit();
+            }
+          });
+        });
+    </script>
+  </body>
+</html>

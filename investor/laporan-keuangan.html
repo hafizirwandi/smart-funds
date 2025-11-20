@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Funds - Admin UMKM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+      .btn-action {
+        transition: all 0.3s ease;
+      }
+
+      .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .table-editable td {
+        padding: 0.75rem 0.5rem;
+      }
+
+      .table-editable input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+      }
+
+      .table-editable input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      .camera-frame {
+        border: 3px solid #3b82f6;
+        border-radius: 1rem;
+        overflow: hidden;
+        background: #000;
+        aspect-ratio: 4/5;
+      }
+
+      @media (max-width: 768px) {
+        .camera-frame {
+          aspect-ratio: 9/16;
+        }
+      }
+
+      .modal-backdrop {
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .sidebar-hidden {
+          transform: translateX(-100%);
+          transition: transform 0.3s ease;
+        }
+
+        .sidebar-visible {
+          transform: translateX(0);
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <!-- Sidebar -->
+    <div
+      id="sidebar"
+      class="fixed left-0 top-0 w-64 h-screen bg-gradient-to-b from-blue-600 to-blue-800 text-white shadow-lg md:translate-x-0 sidebar-hidden z-40 transition-transform">
+      <div class="p-6 border-b border-blue-700">
+        <div class="flex items-center">
+          <i class="fas fa-brain text-2xl mr-3"></i>
+          <div>
+            <h1 class="text-xl font-bold">Smart Funds</h1>
+            <p class="text-xs text-blue-200">Admin UMKM</p>
+          </div>
+        </div>
+      </div>
+
+      <nav class="mt-8 px-4">
+        <div class="mb-6">
+          <p class="text-xs text-blue-300 font-semibold mb-3">MENU</p>
+          <a
+            href="/investor/index.html"
+            class="flex items-center px-4 py-3 mt-2 bg-blue-700 rounded-lg font-semibold">
+            <i class="fas fa-camera mr-3"></i>Daftar UMKM
+          </a>
+
+          <a
+            href="../index.html"
+            class="flex items-center px-4 py-3 mt-2 hover:bg-blue-700 rounded-lg transition">
+            <i class="fas fa-sign-out mr-3"></i>Logout
+          </a>
+        </div>
+
+        <div class="border-t border-blue-700 mt-6 pt-6">
+          <p class="text-xs text-blue-300 font-semibold mb-3">AKUN</p>
+          <div class="flex items-center p-3 bg-blue-700 rounded-lg">
+            <i class="fas fa-user-circle text-2xl mr-3"></i>
+            <div class="text-xs">
+              <p class="font-semibold">Toko Batik Indah</p>
+              <p class="text-blue-200">Pemilik</p>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <!-- Mobile Toggle Button -->
+    <button
+      onclick="toggleSidebar()"
+      class="md:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-3 rounded-lg">
+      <i class="fas fa-bars"></i>
+    </button>
+    <!-- Main Content -->
+    <div class="md:ml-64">
+      <!-- Header -->
+      <div
+        class="bg-white border-b border-gray-200 px-4 md:px-8 py-6 sticky top-0 z-10 shadow-sm mt-[80px] sm:mt-0">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-900">
+              Riwayat Dokumen
+            </h2>
+            <!-- <p class="text-xs md:text-sm text-gray-600 mt-1">Riwayat Dokumen</p> -->
+          </div>
+          <div class="text-right">
+            <p class="text-xs md:text-sm text-gray-600" id="currentDate"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 md:p-8">
+        <section class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold">
+              Laporan Keuangan — <span id="titleUMKM">—</span>
+            </h2>
+
+            <!-- UMKM Selector (juga support ?id=) -->
+            <div class="flex items-center gap-3">
+              <label class="text-sm font-medium">Pilih UMKM</label>
+              <select id="selectUmkm" class="border p-2 rounded">
+                <!-- options injected by JS -->
+              </select>
+            </div>
+          </div>
+
+          <!-- TOP DASHBOARD -->
+          <div
+            id="topDashboard"
+            class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6"></div>
+
+          <!-- CHARTS -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white p-4 rounded shadow">
+              <h3 class="font-semibold mb-2">
+                Pendapatan & Pengeluaran (per bulan)
+              </h3>
+              <canvas id="chartIncomeExpense" height="220"></canvas>
+            </div>
+
+            <div class="bg-white p-4 rounded shadow">
+              <h3 class="font-semibold mb-2">Laba Bersih (per bulan)</h3>
+              <canvas id="chartProfit" height="220"></canvas>
+            </div>
+
+            <div class="bg-white p-4 rounded shadow">
+              <h3 class="font-semibold mb-2">Rasio Keuangan (Margin Laba %)</h3>
+              <canvas id="chartRatio" height="220"></canvas>
+            </div>
+
+            <div class="bg-white p-4 rounded shadow">
+              <h3 class="font-semibold mb-2">
+                Komposisi Pengeluaran (Terakhir)
+              </h3>
+              <canvas id="chartPieExpense" height="220"></canvas>
+            </div>
+          </div>
+
+          <!-- BAR COMPARISON -->
+          <div class="bg-white p-4 rounded shadow mb-6">
+            <h3 class="font-semibold mb-2">
+              Perbandingan Pendapatan vs Pengeluaran (Total per kategori)
+            </h3>
+            <canvas id="chartBarCategory" height="140"></canvas>
+          </div>
+
+          <!-- TRANSAKSI (ringkasan) -->
+          <div class="bg-white p-4 rounded shadow mb-6">
+            <h3 class="font-semibold mb-3">Ringkasan Transaksi Terbaru</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-100">
+                  <tr>
+                    <th class="p-2 text-left">Tanggal</th>
+                    <th class="p-2 text-left">Kategori</th>
+                    <th class="p-2 text-left">Jenis</th>
+                    <th class="p-2 text-right">Jumlah</th>
+                  </tr>
+                </thead>
+                <tbody id="tableTransaksi"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ANALYSIS -->
+          <div class="flex gap-4 items-start mb-4">
+            <button
+              id="btnRunAnalysis"
+              class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+              Analisis Laporan Ini
+            </button>
+
+            <div
+              id="aiLoader"
+              class="hidden flex items-center gap-3 text-sm text-gray-600">
+              <div
+                class="animate-spin h-5 w-5 border-4 border-purple-600 border-t-transparent rounded-full"></div>
+              <div>AI sedang menganalisis laporan...</div>
+            </div>
+          </div>
+
+          <div
+            id="analysisResult"
+            class="hidden bg-white p-4 rounded shadow mb-6">
+            <!-- Will be injected by JS -->
+          </div>
+
+          <!-- ACTION -->
+          <div class="flex gap-4">
+            <button
+              id="btnAccept"
+              class="flex-1 bg-green-600 text-white py-3 rounded hover:bg-green-700">
+              ✔ Terima Pengajuan
+            </button>
+            <button
+              id="btnReject"
+              class="flex-1 bg-red-600 text-white py-3 rounded hover:bg-red-700">
+              ✖ Tolak Pengajuan
+            </button>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      /* ============================
+     SIDEBAR CONTROL
+  ============================ */
+      function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        sidebar.classList.toggle("sidebar-hidden");
+        sidebar.classList.toggle("sidebar-visible");
+      }
+
+      function closeSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        sidebar.classList.add("sidebar-hidden");
+        sidebar.classList.remove("sidebar-visible");
+      }
+
+      /* ============================
+     SET DATE HEADER
+  ============================ */
+      function setCurrentDate() {
+        const options = {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        };
+        const today = new Date();
+        document.getElementById("currentDate").textContent =
+          today.toLocaleDateString("id-ID", options);
+      }
+    </script>
+
+    <!-- Include Chart.js & SweetAlert (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
+
+    <script>
+      /* ============================
+   DUMMY MULTI-UMKM DATA
+   - monthly: 12 months arrays for income & expense
+   - expenseBreakdown: object of categories last month
+   - transactions: recent transactions list
+   ============================ */
+      const UMKM_LIST = [
+        {
+          id: "umkm-01",
+          name: "Toko Batik Indah",
+          owner: "Siti Rahma",
+          monthly: {
+            months: [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
+            ],
+            income: [
+              4200000, 4800000, 4500000, 5000000, 4700000, 5200000, 5100000,
+              5300000, 4900000, 4500000, 4700000, 5200000,
+            ],
+            expense: [
+              2100000, 2300000, 2200000, 2400000, 2300000, 2500000, 2450000,
+              2600000, 2400000, 2300000, 2350000, 2500000,
+            ],
+          },
+          expenseBreakdown: {
+            "Bahan Baku": 1200000,
+            Gaji: 800000,
+            Overhead: 400000,
+            Marketing: 200000,
+          },
+          transactions: [
+            {
+              date: "2025-11-01",
+              category: "Penjualan",
+              type: "Income",
+              amount: 700000,
+            },
+            {
+              date: "2025-11-03",
+              category: "Bahan Baku",
+              type: "Expense",
+              amount: 200000,
+            },
+            {
+              date: "2025-11-05",
+              category: "Penjualan",
+              type: "Income",
+              amount: 800000,
+            },
+            {
+              date: "2025-11-09",
+              category: "Gaji",
+              type: "Expense",
+              amount: 400000,
+            },
+            {
+              date: "2025-11-12",
+              category: "Overhead",
+              type: "Expense",
+              amount: 150000,
+            },
+          ],
+        },
+        {
+          id: "umkm-02",
+          name: "Kedai Kopi Santai",
+          owner: "Budi Hartono",
+          monthly: {
+            months: [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
+            ],
+            income: [
+              5200000, 5100000, 5300000, 5400000, 5000000, 5600000, 5800000,
+              5900000, 5700000, 5500000, 5400000, 6000000,
+            ],
+            expense: [
+              3000000, 2900000, 3100000, 3200000, 3000000, 3300000, 3400000,
+              3350000, 3300000, 3200000, 3150000, 3500000,
+            ],
+          },
+          expenseBreakdown: {
+            "Bahan Baku": 1500000,
+            Gaji: 1200000,
+            Sewa: 400000,
+            Promosi: 200000,
+          },
+          transactions: [
+            {
+              date: "2025-11-02",
+              category: "Penjualan",
+              type: "Income",
+              amount: 900000,
+            },
+            {
+              date: "2025-11-04",
+              category: "Promosi",
+              type: "Expense",
+              amount: 120000,
+            },
+            {
+              date: "2025-11-07",
+              category: "Penjualan",
+              type: "Income",
+              amount: 850000,
+            },
+            {
+              date: "2025-11-11",
+              category: "Gaji",
+              type: "Expense",
+              amount: 500000,
+            },
+            {
+              date: "2025-11-14",
+              category: "Sewa",
+              type: "Expense",
+              amount: 400000,
+            },
+          ],
+        },
+        // add 8 more UMKM quickly (dummy)
+        {
+          id: "umkm-03",
+          name: "Dapur Kue Manis",
+          owner: "Lia Amanda",
+          monthly: {
+            months: [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
+            ],
+            income: [
+              2500000, 2700000, 2600000, 2800000, 2750000, 2900000, 3000000,
+              3100000, 2950000, 2850000, 2900000, 3050000,
+            ],
+            expense: [
+              1200000, 1300000, 1250000, 1350000, 1320000, 1400000, 1450000,
+              1500000, 1420000, 1380000, 1400000, 1480000,
+            ],
+          },
+          expenseBreakdown: { Bahan: 900000, Gaji: 400000, Overhead: 200000 },
+          transactions: [
+            {
+              date: "2025-11-03",
+              category: "Penjualan",
+              type: "Income",
+              amount: 600000,
+            },
+            {
+              date: "2025-11-08",
+              category: "Bahan",
+              type: "Expense",
+              amount: 120000,
+            },
+          ],
+        },
+        {
+          id: "umkm-04",
+          name: "Service Motor Maju Jaya",
+          owner: "Andi Saputra",
+          monthly: {
+            months: [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
+            ],
+            income: [
+              2000000, 2100000, 2050000, 2200000, 2150000, 2250000, 2300000,
+              2350000, 2200000, 2150000, 2180000, 2250000,
+            ],
+            expense: [
+              1000000, 1050000, 1020000, 1100000, 1080000, 1120000, 1150000,
+              1170000, 1100000, 1080000, 1090000, 1130000,
+            ],
+          },
+          expenseBreakdown: {
+            Sparepart: 600000,
+            Gaji: 300000,
+            Overhead: 200000,
+          },
+          transactions: [
+            {
+              date: "2025-11-01",
+              category: "Service",
+              type: "Income",
+              amount: 400000,
+            },
+          ],
+        },
+        {
+          id: "umkm-05",
+          name: "Toko Sembako Berkah",
+          owner: "Fitri Handayani",
+          monthly: {
+            months: [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
+            ],
+            income: [
+              3500000, 3600000, 3550000, 3700000, 3650000, 3800000, 3900000,
+              3950000, 3800000, 3700000, 3750000, 3850000,
+            ],
+            expense: [
+              2000000, 2050000, 2020000, 2100000, 2080000, 2150000, 2200000,
+              2250000, 2150000, 2100000, 2120000, 2180000,
+            ],
+          },
+          expenseBreakdown: { Pembelian: 1300000, Gaji: 600000, Sewa: 300000 },
+          transactions: [
+            {
+              date: "2025-11-05",
+              category: "Pembelian",
+              type: "Expense",
+              amount: 500000,
+            },
+          ],
+        },
+        {
+          id: "umkm-06",
+          name: "Studio Foto Keluarga",
+          owner: "Ridho Pratama",
+          monthly: {
+            months: [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
+            ],
+            income: [
+              1800000, 1900000, 1850000, 2000000, 1950000, 2050000, 2100000,
+              2150000, 2000000, 1950000, 1980000, 2050000,
+            ],
+            expense: [
+              900000, 950000, 920000, 980000, 960000, 1000000, 1020000, 1030000,
+              980000, 970000, 980000, 1000000,
+            ],
+          },
+          expenseBreakdown: {
+            Peralatan: 500000,
+            Gaji: 300000,
+            Overhead: 200000,
+          },
+          transactions: [
+            {
+              date: "2025-11-02",
+              category: "Pemotretan",
+              type: "Income",
+              amount: 300000,
+            },
+          ],
+        },
+        {
+          id: "umkm-07",
+          name: "Meubel Kayu Lestari",
+          owner: "Joko Purwanto",
+          monthly: {
+            months: [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
+            ],
+            income: [
+              4000000, 4100000, 4050000, 4200000, 4150000, 4300000, 4400000,
+              4500000, 4300000, 4200000, 4250000, 4350000,
+            ],
+            expense: [
+              2200000, 2250000, 2220000, 2300000, 2280000, 2350000, 2400000,
+              2450000, 2350000, 2300000, 2320000, 2380000,
+            ],
+          },
+          expenseBreakdown: { Kayu: 1500000, Gaji: 600000, Transport: 200000 },
+          transactions: [
+            {
+              date: "2025-11-06",
+              category: "Pesanan",
+              type: "Income",
+              amount: 800000,
+            },
+          ],
+        },
+        {
+          id: "umkm-08",
+          name: "Laundry Express Bersih",
+          owner: "Dewi Utami",
+          monthly: {
+            months: [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
+            ],
+            income: [
+              2200000, 2300000, 2250000, 2400000, 2350000, 2450000, 2500000,
+              2550000, 2420000, 2380000, 2400000, 2480000,
+            ],
+            expense: [
+              1100000, 1150000, 1120000, 1180000, 1160000, 1200000, 1220000,
+              1250000, 1180000, 1160000, 1170000, 1210000,
+            ],
+          },
+          expenseBreakdown: { Laundry: 700000, Gaji: 300000, Overhead: 200000 },
+          transactions: [
+            {
+              date: "2025-11-04",
+              category: "Laundry",
+              type: "Income",
+              amount: 350000,
+            },
+          ],
+        },
+        {
+          id: "umkm-09",
+          name: "Percetakan Cepat",
+          owner: "Hendra Wijaya",
+          monthly: {
+            months: [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
+            ],
+            income: [
+              2800000, 2900000, 2850000, 3000000, 2950000, 3050000, 3100000,
+              3150000, 3000000, 2950000, 2980000, 3050000,
+            ],
+            expense: [
+              1400000, 1450000, 1420000, 1500000, 1480000, 1520000, 1550000,
+              1580000, 1500000, 1480000, 1490000, 1530000,
+            ],
+          },
+          expenseBreakdown: { Bahan: 900000, Gaji: 400000, Sewa: 200000 },
+          transactions: [
+            {
+              date: "2025-11-07",
+              category: "Cetak",
+              type: "Income",
+              amount: 500000,
+            },
+          ],
+        },
+        {
+          id: "umkm-10",
+          name: "Warung Makan Padang Lezat",
+          owner: "Sumarni",
+          monthly: {
+            months: [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
+            ],
+            income: [
+              3200000, 3300000, 3250000, 3400000, 3350000, 3500000, 3550000,
+              3600000, 3450000, 3380000, 3420000, 3500000,
+            ],
+            expense: [
+              1600000, 1650000, 1620000, 1700000, 1680000, 1750000, 1780000,
+              1800000, 1720000, 1680000, 1700000, 1760000,
+            ],
+          },
+          expenseBreakdown: { Bahan: 1100000, Gaji: 400000, Listrik: 200000 },
+          transactions: [
+            {
+              date: "2025-11-08",
+              category: "Pesanan",
+              type: "Income",
+              amount: 600000,
+            },
+          ],
+        },
+      ];
+
+      /* ============================
+   UTIL & STATE
+   ============================ */
+      let currentUmkmId = null;
+      let charts = {};
+
+      /* helper */
+      function rupiah(n) {
+        return "Rp " + n.toLocaleString("id-ID");
+      }
+
+      /* get id from url param ?id=umkm-01 */
+      const params = new URLSearchParams(window.location.search);
+      const initId = params.get("id") || UMKM_LIST[0].id;
+
+      /* populate selector */
+      const select = document.getElementById("selectUmkm");
+      UMKM_LIST.forEach((u) => {
+        const opt = document.createElement("option");
+        opt.value = u.id;
+        opt.textContent = u.name;
+        select.appendChild(opt);
+      });
+      select.value = initId;
+      select.addEventListener("change", () => loadUmkm(select.value));
+
+      /* initial load */
+      loadUmkm(initId);
+
+      /* ============================
+   LOAD UMKM -> render dashboard, tables, charts
+   ============================ */
+      function loadUmkm(id) {
+        currentUmkmId = id;
+        const umkm = UMKM_LIST.find((x) => x.id === id);
+        if (!umkm) return;
+        document.getElementById("titleUMKM").textContent = umkm.name;
+
+        // dashboard top values (latest month = index 11)
+        const incomeArr = umkm.monthly.income;
+        const expenseArr = umkm.monthly.expense;
+        const lastIncome = incomeArr[incomeArr.length - 1];
+        const lastExpense = expenseArr[expenseArr.length - 1];
+        const profitArr = incomeArr.map((v, i) => v - expenseArr[i]);
+        const lastProfit = profitArr[profitArr.length - 1];
+        const ratioArr = profitArr.map((p, i) =>
+          incomeArr[i] ? +((p / incomeArr[i]) * 100).toFixed(1) : 0
+        );
+        const lastRatio = ratioArr[ratioArr.length - 1];
+
+        // build top dashboard
+        const top = document.getElementById("topDashboard");
+        top.innerHTML = `
+    <div class="p-4 bg-white rounded shadow">
+      <p class="text-sm text-gray-500">Pendapatan (Bulan Terakhir)</p>
+      <p class="text-2xl font-bold text-green-600">${rupiah(lastIncome)}</p>
+    </div>
+    <div class="p-4 bg-white rounded shadow">
+      <p class="text-sm text-gray-500">Pengeluaran (Bulan Terakhir)</p>
+      <p class="text-2xl font-bold text-red-600">${rupiah(lastExpense)}</p>
+    </div>
+    <div class="p-4 bg-white rounded shadow">
+      <p class="text-sm text-gray-500">Laba Bersih (Bulan Terakhir)</p>
+      <p class="text-2xl font-bold text-blue-600">${rupiah(lastProfit)}</p>
+    </div>
+    <div class="p-4 bg-white rounded shadow">
+      <p class="text-sm text-gray-500">Margin Laba (%)</p>
+      <p class="text-2xl font-bold text-purple-600">${lastRatio}%</p>
+    </div>
+  `;
+
+        // render transactions table
+        const tb = document.getElementById("tableTransaksi");
+        tb.innerHTML = "";
+        umkm.transactions
+          .slice()
+          .reverse()
+          .forEach((tr) => {
+            tb.innerHTML += `
+      <tr class="border-b">
+        <td class="p-2">${tr.date}</td>
+        <td class="p-2">${tr.category}</td>
+        <td class="p-2">${tr.type}</td>
+        <td class="p-2 text-right font-semibold ${
+          tr.type === "Income" ? "text-green-600" : "text-red-600"
+        }">${rupiah(tr.amount)}</td>
+      </tr>
+    `;
+          });
+
+        // Charts data
+        const labels = umkm.monthly.months;
+        const incomeData = umkm.monthly.income;
+        const expenseData = umkm.monthly.expense;
+        const profitData = incomeData.map((v, i) => v - expenseData[i]);
+        const ratioData = profitData.map((p, i) =>
+          incomeData[i] ? +((p / incomeData[i]) * 100).toFixed(1) : 0
+        );
+
+        // destroy existing charts
+        Object.values(charts).forEach((c) => c && c.destroy && c.destroy());
+        charts = {};
+
+        // Chart Income vs Expense (line)
+        const ctx1 = document
+          .getElementById("chartIncomeExpense")
+          .getContext("2d");
+        charts.incomeExpense = new Chart(ctx1, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Pendapatan",
+                data: incomeData,
+                borderWidth: 2,
+                tension: 0.3,
+                fill: false,
+                borderColor: "#16a34a",
+              },
+              {
+                label: "Pengeluaran",
+                data: expenseData,
+                borderWidth: 2,
+                tension: 0.3,
+                fill: false,
+                borderColor: "#dc2626",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { position: "bottom" } },
+          },
+        });
+
+        // Chart Profit (line)
+        const ctx2 = document.getElementById("chartProfit").getContext("2d");
+        charts.profit = new Chart(ctx2, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Laba Bersih",
+                data: profitData,
+                borderColor: "#2563eb",
+                fill: true,
+                backgroundColor: "rgba(37,99,235,0.1)",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+          },
+        });
+
+        // Chart Ratio (line)
+        const ctx3 = document.getElementById("chartRatio").getContext("2d");
+        charts.ratio = new Chart(ctx3, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Margin (%)",
+                data: ratioData,
+                borderColor: "#7c3aed",
+                fill: false,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } },
+          },
+        });
+
+        // Pie expense breakdown (use last month breakdown)
+        const ctx4 = document
+          .getElementById("chartPieExpense")
+          .getContext("2d");
+        const eb = umkm.expenseBreakdown;
+        charts.pie = new Chart(ctx4, {
+          type: "pie",
+          data: {
+            labels: Object.keys(eb),
+            datasets: [{ data: Object.values(eb) }],
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { position: "bottom" } },
+          },
+        });
+
+        // Bar Category comparison (sum categories simple)
+        const categories = Object.keys(eb);
+        const incomeByCat = categories.map((_) => 0);
+        const expenseByCat = categories.map((k) => eb[k]);
+        // rough synthetic income by category (split proportionally)
+        const totalIncome = incomeData.reduce((a, b) => a + b, 0);
+        const totalExpense = expenseData.reduce((a, b) => a + b, 0);
+        // create synthetic mapping: income split equally across categories
+        const incPerCat = categories.map(() =>
+          Math.round(totalIncome / categories.length)
+        );
+        const ctx5 = document
+          .getElementById("chartBarCategory")
+          .getContext("2d");
+        charts.bar = new Chart(ctx5, {
+          type: "bar",
+          data: {
+            labels: categories,
+            datasets: [
+              {
+                label: "Pendapatan",
+                data: incPerCat,
+                backgroundColor: "#0ea5a4",
+              },
+              {
+                label: "Pengeluaran",
+                data: expenseByCat,
+                backgroundColor: "#f97316",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { position: "bottom" } },
+          },
+        });
+
+        // hide previous analysis result whenever UMKM changes
+        document.getElementById("analysisResult").classList.add("hidden");
+        document.getElementById("aiLoader").classList.add("hidden");
+      }
+
+      /* ============================
+   ADVANCED AI ANALYSIS (CLIENT-SIDE SIMULATION)
+   - scoring: cashflowScore, stabilityScore, anomalyScore, fraudRisk
+   - generate insights, feedback, recommendations
+   ============================ */
+      function analyzeUmkm(umkm) {
+        // compute monthly metrics
+        const inc = umkm.monthly.income;
+        const exp = umkm.monthly.expense;
+        const profit = inc.map((v, i) => v - exp[i]);
+
+        const avgInc = avg(inc),
+          stdInc = std(inc);
+        const avgProfit = avg(profit),
+          stdProfit = std(profit);
+
+        // cashflowScore: based on avgProfit relative to avgInc
+        let cashflowScore = Math.max(
+          0,
+          Math.min(100, Math.round((avgProfit / (avgInc || 1)) * 150))
+        );
+        // stabilityScore: lower std => higher stability
+        let stabilityScore = Math.max(
+          0,
+          Math.min(100, Math.round(100 - (stdInc / (avgInc || 1)) * 50))
+        );
+        // anomaly detection: check if any month deviates > 2.5*std
+        let anomalyCount = inc.reduce(
+          (c, v) => c + (Math.abs(v - avgInc) > 2.5 * (stdInc || 1) ? 1 : 0),
+          0
+        );
+        let anomalyScore = anomalyCount; // number of anomalies
+        // fraud heuristic: check repeated identical large transactions in transactions list
+        const trans = umkm.transactions;
+        let repeatedAmounts = findRepeatedAmounts(trans.map((t) => t.amount));
+        let fraudRisk = Math.min(
+          100,
+          repeatedAmounts.length * 40 + anomalyCount * 15
+        );
+
+        // overall score (weighted)
+        const overall = Math.round(
+          cashflowScore * 0.45 + stabilityScore * 0.3 + (100 - fraudRisk) * 0.25
+        );
+
+        // qualitative category
+        let category =
+          overall >= 75
+            ? "Sangat Baik"
+            : overall >= 60
+            ? "Cukup Baik"
+            : overall >= 40
+            ? "Kurang Baik"
+            : "Buruk";
+
+        // insights: build array of strings
+        let insights = [];
+        if (avgProfit > 0)
+          insights.push(
+            `Rata-rata laba bulanan sekitar ${rupiah(Math.round(avgProfit))}.`
+          );
+        else
+          insights.push(
+            `Rata-rata laba bulanan negatif (${rupiah(
+              Math.round(avgProfit)
+            )}), ini berisiko jika berlangsung lama.`
+          );
+
+        insights.push(
+          `Variasi pendapatan (std dev) sekitar ${Math.round(stdInc)} — ${
+            stdInc > avgInc * 0.5 ? "tinggi" : "wajar"
+          }.`
+        );
+        if (anomalyCount > 0)
+          insights.push(
+            `Ditemukan ${anomalyCount} bulan dengan variasi pendapatan sangat besar (potensi anomali).`
+          );
+        if (repeatedAmounts.length > 0)
+          insights.push(
+            `Terdeteksi transaksi berulang dengan nilai sama: ${repeatedAmounts
+              .slice(0, 3)
+              .join(", ")} (periksa input/duplikasi).`
+          );
+
+        // recommendations: prioritized actionable items
+        const recs = [];
+        if (overall >= 75) {
+          recs.push(
+            "Rekomendasi: Terima pengajuan. Lakukan monitoring berkala tiap 1-3 bulan."
+          );
+          recs.push(
+            "Pertimbangkan penawaran produk tambahan untuk meningkatkan pendapatan."
+          );
+        } else if (overall >= 60) {
+          recs.push(
+            "Rekomendasi: Terima dengan syarat (monitoring + laporan bulanan)."
+          );
+          recs.push(
+            "Terapkan kontrol biaya untuk pos yang meningkat, dan review kontrak pemasok."
+          );
+        } else if (overall >= 40) {
+          recs.push(
+            "Rekomendasi: Tunda atau terima kecil (menyesuaikan plafon). Minta jaminan atau persyaratan tambahan."
+          );
+          recs.push(
+            "Lakukan audit transaksi yang terindikasi anomali sebelum pencairan."
+          );
+        } else {
+          recs.push(
+            "Rekomendasi: Tolak atau perlu program pendampingan/rehabilitasi usaha terlebih dahulu."
+          );
+          recs.push(
+            "Minta perbaikan laporan keuangan dan verifikasi dokumen legal sebelum pengajuan ulang."
+          );
+        }
+
+        return {
+          overallScore: overall,
+          category,
+          cashflowScore,
+          stabilityScore,
+          anomalyCount,
+          fraudRisk,
+          insights,
+          recs,
+        };
+      }
+
+      /* helper math */
+      function avg(arr) {
+        return arr.reduce((a, b) => a + b, 0) / arr.length;
+      }
+      function std(arr) {
+        const m = avg(arr);
+        return Math.sqrt(
+          arr.reduce((s, x) => s + Math.pow(x - m, 2), 0) / arr.length
+        );
+      }
+      function findRepeatedAmounts(arr) {
+        const map = {};
+        arr.forEach((v) => (map[v] = (map[v] || 0) + 1));
+        return Object.keys(map)
+          .filter((k) => map[k] > 1)
+          .map(Number);
+      }
+
+      /* ============================
+   BUTTON HANDLERS
+   ============================ */
+      document
+        .getElementById("btnRunAnalysis")
+        .addEventListener("click", async () => {
+          const umkm = UMKM_LIST.find((u) => u.id === currentUmkmId);
+          if (!umkm) return;
+
+          // show loader
+          document.getElementById("aiLoader").classList.remove("hidden");
+          document.getElementById("analysisResult").classList.add("hidden");
+
+          // simulate processing delay (and stepwise updates could be added)
+          await sleep(1200);
+
+          const result = analyzeUmkm(umkm);
+
+          // hide loader, render result
+          document.getElementById("aiLoader").classList.add("hidden");
+          const el = document.getElementById("analysisResult");
+          el.innerHTML = renderAnalysisHtml(result);
+          el.classList.remove("hidden");
+
+          // scroll to result
+          el.scrollIntoView({ behavior: "smooth" });
+        });
+
+      /* Accept / Reject buttons */
+      document
+        .getElementById("btnAccept")
+        .addEventListener("click", () => handleDecision("diterima"));
+      document
+        .getElementById("btnReject")
+        .addEventListener("click", () => handleDecision("ditolak"));
+
+      function handleDecision(status) {
+        Swal.fire({
+          title:
+            status === "diterima" ? "Terima Pengajuan?" : "Tolak Pengajuan?",
+          text: "Keputusan ini akan disimpan dan pemohon akan diberi tahu.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Ya",
+          cancelButtonText: "Batal",
+        }).then((res) => {
+          if (res.isConfirmed) {
+            Swal.fire({
+              title: "Sukses",
+              text:
+                status === "diterima"
+                  ? "Pengajuan diterima."
+                  : "Pengajuan ditolak.",
+              icon: "success",
+              timer: 1200,
+              showConfirmButton: false,
+            });
+            setTimeout(() => history.back(), 1200); // go back to previous page
+          }
+        });
+      }
+
+      /* render analysis HTML */
+      function renderAnalysisHtml(r) {
+        return `
+    <div class="grid md:grid-cols-3 gap-4 mb-4">
+      <div class="p-3 bg-gray-50 rounded">
+        <p class="text-sm text-gray-500">Skor Keseluruhan</p>
+        <p class="text-2xl font-bold">${r.overallScore}</p>
+        <p class="text-sm text-gray-600">${r.category}</p>
+      </div>
+      <div class="p-3 bg-gray-50 rounded">
+        <p class="text-sm text-gray-500">Cashflow Score</p>
+        <p class="text-xl font-semibold">${r.cashflowScore}</p>
+        <p class="text-sm text-gray-600">Stability Score: ${
+          r.stabilityScore
+        }</p>
+      </div>
+      <div class="p-3 bg-gray-50 rounded">
+        <p class="text-sm text-gray-500">Fraud Risk</p>
+        <p class="text-xl font-semibold text-red-600">${r.fraudRisk}</p>
+        <p class="text-sm text-gray-600">Anomaly Count: ${r.anomalyCount}</p>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <h4 class="font-semibold mb-2">Insight & Feedback</h4>
+      <ul class="list-disc ml-6 text-sm text-gray-700">
+        ${r.insights.map((i) => `<li>${i}</li>`).join("")}
+      </ul>
+    </div>
+
+    <div>
+      <h4 class="font-semibold mb-2">Rekomendasi Tindakan</h4>
+      <ol class="list-decimal ml-6 text-sm text-gray-700">
+        ${r.recs.map((rc) => `<li class="mb-1">${rc}</li>`).join("")}
+      </ol>
+    </div>
+  `;
+      }
+
+      /* small util */
+      function sleep(ms) {
+        return new Promise((res) => setTimeout(res, ms));
+      }
+    </script>
+  </body>
+</html>

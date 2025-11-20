@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Funds - Admin UMKM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+      .btn-action {
+        transition: all 0.3s ease;
+      }
+
+      .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .table-editable td {
+        padding: 0.75rem 0.5rem;
+      }
+
+      .table-editable input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+      }
+
+      .table-editable input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      .camera-frame {
+        border: 3px solid #3b82f6;
+        border-radius: 1rem;
+        overflow: hidden;
+        background: #000;
+        aspect-ratio: 4/5;
+      }
+
+      @media (max-width: 768px) {
+        .camera-frame {
+          aspect-ratio: 9/16;
+        }
+      }
+
+      .modal-backdrop {
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .sidebar-hidden {
+          transform: translateX(-100%);
+          transition: transform 0.3s ease;
+        }
+
+        .sidebar-visible {
+          transform: translateX(0);
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <!-- Sidebar -->
+    <div
+      id="sidebar"
+      class="fixed left-0 top-0 w-64 h-screen bg-gradient-to-b from-blue-600 to-blue-800 text-white shadow-lg md:translate-x-0 sidebar-hidden z-40 transition-transform">
+      <div class="p-6 border-b border-blue-700">
+        <div class="flex items-center">
+          <i class="fas fa-brain text-2xl mr-3"></i>
+          <div>
+            <h1 class="text-xl font-bold">Smart Funds</h1>
+            <p class="text-xs text-blue-200">Admin UMKM</p>
+          </div>
+        </div>
+      </div>
+
+      <nav class="mt-8 px-4">
+        <div class="mb-6">
+          <p class="text-xs text-blue-300 font-semibold mb-3">MENU</p>
+          <a
+            href="/umkm/scan-dokumen.html"
+            class="flex items-center px-4 py-3 mt-2 hover:bg-blue-700 rounded-lg transition">
+            <i class="fas fa-camera mr-3"></i>Scan Dokumen
+          </a>
+          <a
+            href="/umkm/riwayat-document.html"
+            class="flex items-center px-4 py-3 mt-2 bg-blue-700 rounded-lg font-semibold">
+            <i class="fas fa-list mr-3"></i>Riwayat Dokumen
+          </a>
+          <a
+            href="/umkm/laporan-keuangan.html"
+            class="flex items-center px-4 py-3 mt-2 hover:bg-blue-700 rounded-lg transition">
+            <i class="fas fa-chart-bar mr-3"></i>Laporan Keuangan
+          </a>
+          <a
+            href="/umkm/ajukan-pinjaman.html"
+            class="flex items-center px-4 py-3 mt-2 hover:bg-blue-700 rounded-lg transition">
+            <i class="fas fa-pencil mr-3"></i>Ajukan Pinjaman
+          </a>
+          <a
+            href="../index.html"
+            class="flex items-center px-4 py-3 mt-2 hover:bg-blue-700 rounded-lg transition">
+            <i class="fas fa-sign-out mr-3"></i>Logout
+          </a>
+        </div>
+
+        <div class="border-t border-blue-700 mt-6 pt-6">
+          <p class="text-xs text-blue-300 font-semibold mb-3">AKUN</p>
+          <div class="flex items-center p-3 bg-blue-700 rounded-lg">
+            <i class="fas fa-user-circle text-2xl mr-3"></i>
+            <div class="text-xs">
+              <p class="font-semibold">Toko Batik Indah</p>
+              <p class="text-blue-200">Pemilik</p>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <!-- Mobile Toggle Button -->
+    <button
+      onclick="toggleSidebar()"
+      class="md:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-3 rounded-lg">
+      <i class="fas fa-bars"></i>
+    </button>
+    <!-- Main Content -->
+    <div class="md:ml-64">
+      <!-- Header -->
+      <div
+        class="bg-white border-b border-gray-200 px-4 md:px-8 py-6 sticky top-0 z-10 shadow-sm mt-[80px] sm:mt-0">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-900">
+              Riwayat Dokumen
+            </h2>
+            <!-- <p class="text-xs md:text-sm text-gray-600 mt-1">Riwayat Dokumen</p> -->
+          </div>
+          <div class="text-right">
+            <p class="text-xs md:text-sm text-gray-600" id="currentDate"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 md:p-8">
+        <section class="p-6">
+          <h2 class="text-xl font-bold mb-4">Riwayat Dokumen</h2>
+
+          <!-- FILTER -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label class="font-medium text-gray-700">Jenis Dokumen</label>
+              <select id="filterType" class="w-full mt-1 p-2 border rounded">
+                <option value="">Semua</option>
+                <option value="Faktur">Faktur</option>
+                <option value="Kwitansi">Kwitansi</option>
+                <option value="Nota">Nota</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="font-medium text-gray-700">Status</label>
+              <select id="filterStatus" class="w-full mt-1 p-2 border rounded">
+                <option value="">Semua</option>
+                <option value="Success">Success</option>
+                <option value="Pending">Pending</option>
+                <option value="Failed">Failed</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="font-medium text-gray-700">Tanggal</label>
+              <input
+                type="date"
+                id="filterDate"
+                class="w-full mt-1 p-2 border rounded" />
+            </div>
+          </div>
+
+          <!-- TABLE -->
+          <table id="docTable" class="min-w-full text-sm">
+            <thead>
+              <tr class="bg-gray-100 border-b">
+                <th class="p-3 text-left">Gambar</th>
+                <th class="p-3 text-left">Nama Dokumen</th>
+                <th class="p-3 text-left">Jenis</th>
+                <th class="p-3 text-left">Tanggal</th>
+                <th class="p-3 text-left">Status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </section>
+      </div>
+    </div>
+    <!-- PREVIEW MODAL -->
+    <div
+      id="previewModal"
+      class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
+      <div class="bg-white p-4 rounded-lg max-w-3xl w-full relative">
+        <button
+          class="absolute top-3 right-3 text-gray-500 hover:text-black"
+          onclick="closePreview()">
+          &times;
+        </button>
+
+        <h3 class="text-lg font-semibold mb-2">Preview Dokumen</h3>
+        <img id="previewImage" src="" class="w-full rounded shadow" />
+      </div>
+    </div>
+    <script>
+      /* ============================
+     SIDEBAR CONTROL
+  ============================ */
+      function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        sidebar.classList.toggle("sidebar-hidden");
+        sidebar.classList.toggle("sidebar-visible");
+      }
+
+      function closeSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        sidebar.classList.add("sidebar-hidden");
+        sidebar.classList.remove("sidebar-visible");
+      }
+
+      /* ============================
+     SET DATE HEADER
+  ============================ */
+      function setCurrentDate() {
+        const options = {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        };
+        const today = new Date();
+        document.getElementById("currentDate").textContent =
+          today.toLocaleDateString("id-ID", options);
+      }
+    </script>
+    <script>
+      // Dummy data array
+      const documents = [
+        {
+          name: "Faktur Pembelian #001",
+          type: "Faktur",
+          date: "2025-11-18",
+          status: "Success",
+          image: "/../img/1.jpg",
+        },
+        {
+          name: "Nota Servis AC",
+          type: "Nota",
+          date: "2025-11-17",
+          status: "Pending",
+          image: "/../img/2.jpg",
+        },
+        {
+          name: "Kwitansi Sewa",
+          type: "Kwitansi",
+          date: "2025-11-16",
+          status: "Failed",
+          image: "/../img/3.jpg",
+        },
+      ];
+
+      // Load data into table
+      function loadDocumentTable() {
+        const tbody = document.querySelector("#docTable tbody");
+        tbody.innerHTML = "";
+
+        documents.forEach((doc, i) => {
+          const row = `
+      <tr class="border-b">
+        <td class="p-3">
+          <img src="${doc.image}"
+               class="w-16 h-16 object-cover rounded cursor-pointer"
+               onclick="showPreview('${doc.image}')">
+        </td>
+        <td class="p-3">${doc.name}</td>
+        <td class="p-3">${doc.type}</td>
+        <td class="p-3">${doc.date}</td>
+        <td class="p-3">
+          <span class="px-3 py-1 rounded text-white ${statusColor(doc.status)}">
+            ${doc.status}
+          </span>
+        </td>
+      </tr>
+    `;
+          tbody.innerHTML += row;
+        });
+      }
+
+      // Status color handler
+      function statusColor(status) {
+        switch (status) {
+          case "Success":
+            return "bg-green-600";
+          case "Pending":
+            return "bg-yellow-500";
+          case "Failed":
+            return "bg-red-600";
+          default:
+            return "bg-gray-500";
+        }
+      }
+
+      // Image preview popup
+      function showPreview(img) {
+        document.getElementById("previewImage").src = img;
+        document.getElementById("previewModal").classList.remove("hidden");
+      }
+
+      function closePreview() {
+        document.getElementById("previewModal").classList.add("hidden");
+      }
+
+      // Filters
+      document
+        .getElementById("filterType")
+        .addEventListener("change", filterData);
+      document
+        .getElementById("filterStatus")
+        .addEventListener("change", filterData);
+      document
+        .getElementById("filterDate")
+        .addEventListener("change", filterData);
+
+      function filterData() {
+        const type = document.getElementById("filterType").value;
+        const status = document.getElementById("filterStatus").value;
+        const date = document.getElementById("filterDate").value;
+
+        const filtered = documents.filter((doc) => {
+          return (
+            (type === "" || doc.type === type) &&
+            (status === "" || doc.status === status) &&
+            (date === "" || doc.date === date)
+          );
+        });
+
+        const tbody = document.querySelector("#docTable tbody");
+        tbody.innerHTML = "";
+
+        filtered.forEach((doc) => {
+          const row = `
+      <tr class="border-b">
+        <td class="p-3">
+          <img src="${doc.image}"
+               class="w-16 h-16 object-cover rounded cursor-pointer"
+               onclick="showPreview('${doc.image}')">
+        </td>
+        <td class="p-3">${doc.name}</td>
+        <td class="p-3">${doc.type}</td>
+        <td class="p-3">${doc.date}</td>
+        <td class="p-3">
+          <span class="px-3 py-1 rounded text-white ${statusColor(doc.status)}">
+            ${doc.status}
+          </span>
+        </td>
+      </tr>
+    `;
+          tbody.innerHTML += row;
+        });
+      }
+
+      // Init load
+      loadDocumentTable();
+    </script>
+  </body>
+</html>
