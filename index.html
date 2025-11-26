@@ -194,6 +194,94 @@
       </div>
     </div>
 
+    <!-- Modal Overlay -->
+    <div
+      id="infoModal"
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+      <div
+        class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-6 animate-fadeIn">
+        <!-- Header -->
+        <h2 class="text-xl font-bold mb-4 text-gray-900">
+          Informasi Prototype Smart Funds
+        </h2>
+
+        <!-- Body -->
+        <div class="text-gray-700 space-y-4">
+          <p>
+            Prototype ini merupakan bagian dari
+            <strong>Lomba Karya Tulis Ilmiah Nasional UNIMED 2025</strong> untuk
+            kategori <strong>KTI dan Poster</strong>. Aplikasi
+            <strong>Smart Funds</strong> dikembangkan sebagai sistem pembukuan
+            otomatis berbasis integrasi
+            <strong>Optical Character Recognition (OCR)</strong> dan
+            <strong>Large Language Model (LLM)</strong>. Sistem ini mampu
+            mengonversi dokumen fisik menjadi entri akuntansi terstruktur secara
+            real-time, serta memberikan rekomendasi finansial yang cerdas dan
+            adaptif.
+          </p>
+
+          <p>
+            Karena ini masih berupa <strong>prototype</strong>, seluruh data,
+            dokumen, transaksi, dan laporan bersifat
+            <strong>fiktif/dummy</strong> dan hanya digunakan untuk tujuan
+            demonstrasi.
+          </p>
+
+          <div
+            class="bg-blue-50 text-blue-800 border border-blue-200 rounded-xl p-4">
+            <p class="font-semibold mb-1">Akses Uji Coba:</p>
+            <p>
+              • UMKM → <strong>username: umkm</strong> |
+              <strong>password: umkm</strong>
+            </p>
+            <p>
+              • Investor → <strong>username: investor</strong> |
+              <strong>password: investor</strong>
+            </p>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-6 flex justify-end">
+          <button
+            id="btnUnderstand"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium shadow">
+            Saya sudah baca dan mengerti
+          </button>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const modal = document.getElementById("infoModal");
+        const btn = document.getElementById("btnUnderstand");
+
+        // Show modal on page load
+        modal.classList.remove("hidden");
+
+        // Close modal only after clicking the button
+        btn.addEventListener("click", function () {
+          modal.classList.add("hidden");
+        });
+      });
+
+      // Simple fade-in animation
+      tailwind.config = {
+        theme: {
+          extend: {
+            animation: {
+              fadeIn: "fadeIn 0.3s ease-out",
+            },
+            keyframes: {
+              fadeIn: {
+                "0%": { opacity: 0, transform: "scale(0.95)" },
+                "100%": { opacity: 1, transform: "scale(1)" },
+              },
+            },
+          },
+        },
+      };
+    </script>
     <script>
       function togglePassword() {
         const passwordInput = document.getElementById("password");
